@@ -274,10 +274,12 @@ export default function App() {
   }
 
   async function callMax(userContent, history) {
+    const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
+    if (!apiKey) throw new Error("API key not configured");
     const msgs = [...history, { role:"user", content:userContent }];
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method:"POST",
-      headers:{"Content-Type":"application/json","x-api-key":import.meta.env.VITE_ANTHROPIC_API_KEY,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
       body:JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:600, system:SYSTEM_PROMPT, messages:msgs }),
     });
     const data = await res.json();
@@ -310,7 +312,8 @@ export default function App() {
       setAiLoading(false);
       safeSpeak(parsed.speech, undefined);
     } catch(e) {
-      setCaption("Could not connect. Please check your connection and try again.");
+      console.error("API error:", e);
+      setCaption(`Error: ${e.message || "Could not connect. Please check your connection and try again."}`);
       setAiLoading(false);
     }
   }
